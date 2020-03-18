@@ -11,7 +11,7 @@ class NewMapForm extends Component {
             <input 
                 type="text" 
                 name="mapName" 
-                value={this.props.mapName}
+                value={this.props.currentMap.mapName}
                 onChange={event => this.props.handleChange(event)}  
             />
           </label>
@@ -20,7 +20,7 @@ class NewMapForm extends Component {
             <input 
                 type="text"
                 name = "lat"
-                value={this.props.lat}
+                value={this.props.currentMap.lat}
                 onChange={event => this.props.handleChange(event)}
             />
           </label>
@@ -29,7 +29,7 @@ class NewMapForm extends Component {
             <input 
                 type="text" 
                 name="long" 
-                value={this.props.long}
+                value={this.props.currentMap.long}
                 onChange={event => this.props.handleChange(event)}    
             />
           </label>
@@ -38,7 +38,7 @@ class NewMapForm extends Component {
             <input 
                 type="text" 
                 name="zoom" 
-                value={this.props.zoom}
+                value={this.props.currentMap.zoom}
                 onChange={event => this.props.handleChange(event)}
             />
           </label>
