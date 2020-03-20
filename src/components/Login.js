@@ -24,7 +24,7 @@ class Login extends React.Component {
       if (!res.error) {
         // const updatedState = { ...this.state.auth, user: res };
         this.props.onLogin(res);
-        this.props.history.push('/');
+        this.props.history.push('/mymaps');
       } else {
         this.setState({ error: true });
       }

@@ -10,7 +10,7 @@ class MapPage extends React.Component {
         return (
           <div className="App">
             <CurrentMap currentMap = {this.props.currentMap} />
-            <NewMapForm currentMap = {this.props.currentMap} handleChange = {this.props.handleChange} />
+            <NewMapForm currentMap = {this.props.currentMap} handleChange = {this.props.handleChange} newMap = {this.props.newMap}  />
           </div>
         );
       }

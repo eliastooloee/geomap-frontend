@@ -2,10 +2,16 @@ import React, { Component } from 'react';
 import '../App.css';
 
 class NewMapForm extends Component {
+
+    handleSubmit = event => {
+        event.preventDefault()
+        this.props.newMap()
+        // this.props.history.push("/mymaps")
+    }
   
     render() {
       return (
-        <form onSubmit={this.props.NewMap}>
+        <form onSubmit={this.handleSubmit}>
           <label>
             Name:
             <input 
@@ -19,8 +25,8 @@ class NewMapForm extends Component {
             Latitude:
             <input 
                 type="text"
-                name = "lat"
-                value={this.props.currentMap.lat}
+                name = "latitude"
+                value={this.props.currentMap.latitude}
                 onChange={event => this.props.handleChange(event)}
             />
           </label>
@@ -28,8 +34,8 @@ class NewMapForm extends Component {
             Longitude:
             <input 
                 type="text" 
-                name="long" 
-                value={this.props.currentMap.long}
+                name="longitude" 
+                value={this.props.currentMap.longitude}
                 onChange={event => this.props.handleChange(event)}    
             />
           </label>

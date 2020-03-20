@@ -3,6 +3,7 @@ import './App.css';
 import Login from "./components/Login";
 import MyMaps from './containers/MyMaps'
 import MapPage from './containers/MapPage'
+import Navbar from "./components/NavBar";
 import { api } from "./services/api";
 
 import { Route } from "react-router-dom";
@@ -15,11 +16,12 @@ class App extends Component {
     },
     currentMap: {
     mapName: "",
-    lat: 0,
-    long: 0,
+    latitude: 0,
+    longitude: 0,
     zoom: 4,
     },
-    MyMaps: []
+    maps: [],
+    myMaps: []
   }
 
   componentDidMount() {
@@ -32,6 +34,7 @@ class App extends Component {
         const updatedState = { ...this.state.auth, user: user };
         this.setState({ auth: updatedState });
       });
+      this.getMaps();
     }
   }
 
@@ -56,21 +59,42 @@ class App extends Component {
       }
     }))
   }
-  
 
+  selectMap = (map) => {
+    this.setState({
+      currentMap: {
+        latitude: map.latitude,
+        longitude: map.longitude,
+        zoom: map.zoom,
+        mapName: map.name
+      }
+    })
+  }
+
+  getMaps = () => {
+    fetch(`http://localhost:3000/api/v1/maps/`)
+    .then(res => res.json())
+    .then(myMaps => this.setState({
+      myMaps: myMaps
+    }))
+    .catch(err => console.log(err))
+  }
+  
   newMap = () => {
-    fetch("http://localhost:3000/maps", {
+    fetch("http://localhost:3000/api/v1/maps", {
       method: "POST",
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json'
       },
       body: JSON.stringify({
-        "user_id": this.props.currentUser.id,
-        "map_name": this.state.currentMap.mapName,
-        "latitude": this.state.currentMap.lat,
-        "longitude": this.state.currentMap.long,
-        "zoom": this.state.currentMap.zoom
+        map: {
+        "user_id": parseFloat(this.state.auth.user.id),
+        "name": this.state.currentMap.mapName,
+        "latitude": parseFloat(this.state.currentMap.latitude),
+        "longitude": parseFloat(this.state.currentMap.longitude),
+        "zoom": parseFloat(this.state.currentMap.zoom)
+        }
       })
     })
   }
@@ -79,12 +103,19 @@ class App extends Component {
     return (
       <div>
         <div className="ui container grid">
+            <Navbar
+              color="green"
+              title="GeoMap"
+              description="Make dank maps"
+              currentUser={this.state.auth.user}
+              handleLogout={this.logout}
+            />
           <div id="content" className="sixteen wide column">
+         
             <Route 
               exact 
               path="/mymaps" 
-              render={props => <MyMaps MyMaps={this.state.MyMaps}  />} 
-
+              render={props => <MyMaps currentMap={this.state.currentMap} selectMap={this.selectMap} myMaps={this.state.myMaps}  />} 
             />
             <Route
               exact
@@ -94,7 +125,7 @@ class App extends Component {
             <Route 
               exact
               path="/map" 
-              render={props => <MapPage currentMap={this.state.currentMap}  handleChange={this.handleChange} />}
+              render={props => <MapPage currentMap={this.state.currentMap}  handleChange={this.handleChange} newMap={this.newMap} />}
               />
           </div>
         </div>

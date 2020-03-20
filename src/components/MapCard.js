@@ -4,10 +4,10 @@ const MapCard = props => {
     const { map, selectMap } = props;
 
     return(
-        <div className="map-card">
+        <div className="map-card" onClick={() => selectMap(map)}>
             <h1> {map.name} </h1>
-            <p> {map.lat}</p>
-            <p> {map.long}</p>
+            <h1> {map.latitude}</h1>
+            <h1> {map.longitude}</h1>
             <p> {map.zoom}</p>
         </div>
     )
