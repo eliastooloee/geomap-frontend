@@ -6,9 +6,10 @@ const MapCard = props => {
     return(
         <div className="map-card" onClick={() => selectMap(map)}>
             <h1> {map.name} </h1>
-            <h1> {map.latitude}</h1>
-            <h1> {map.longitude}</h1>
-            <p> {map.zoom}</p>
+            <p> Map Center Latitude {map.latitude}°</p>
+            <p> Map Center Longitude {map.longitude}°</p>
+            <p> Zoom {map.zoom}</p>
+            <p> Note: Longitude is positive only, numbers will be above 180° for locations in the Western hemisphere</p>
         </div>
     )
 }

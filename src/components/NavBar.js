@@ -24,7 +24,7 @@ const Navbar = props => {
           <a className="item" href="/mymaps">Welcome {currentUser.username}</a>
         ) : null}
         {loggedIn ? (
-          <a className="item" href="/#">
+          <a className="item" href="/login">
             <div
               onClick={() => {
                 props.handleLogout();
