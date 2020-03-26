@@ -1,368 +1,324 @@
 import React, { Component } from "react";
-import { Map, TileLayer, Circle, FeatureGroup } from "react-leaflet";
-import  EditControl  from "./EditControl";
+import {
+  Map as LeafletMap,
+  TileLayer,
+  Circle,
+  Rectangle,
+  Marker,
+  CircleMarker,
+  Polyline,
+  Polygon,
+  Element
+} from 'react-leaflet'
+import  EditControlFeatureGroup from './FeatureGroup';
+// import GeoJsonCluster from 'react-leaflet-geojson-cluster';
 import L from 'leaflet';
 import "../App.css";
 
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.0.0/images/marker-icon.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.0.0/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.0.0/images/marker-shadow.png',
-});
 
-//
-
-let polyline;
-
-export default class CurrentMap extends Component {
-
-
-  // see http://leaflet.github.io/Leaflet.draw/docs/leaflet-draw-latest.html#l-draw-event for leaflet-draw events doc
-
-  _onEdited = (e) => {
-
-    let numEdited = 0;
-    e.layers.eachLayer( (layer) => {
-      numEdited += 1;
-    });
-    console.log(`_onEdited: edited ${numEdited} layers`, e);
-
-    this._onChange();
-  }
-
-  _onCreated = (e) => {
-    let type = e.layerType;
-    let layer = e.layer;
-    if (type === 'marker') {
-      // Do marker specific actions
-      console.log("_onCreated: marker created", e);
+const controlSettings = {
+  draw: {
+    // rectangle: false,
+    // marker: false,
+    // circle: false,
+    // circlemarker: false,
+    polygon: {
+      allowIntersection: false,
+      drawError: {
+        color: '#E1E100',
+        message: '<strong>Wups</strong> shapes cannot intersect'
+      }
     }
-    else {
-      console.log("_onCreated: something else created:", type, e);
+    // polyline: false
+  },
+  edit: {
+    edit: {
+      // NB: edit has a nested edit!
+      selectedPathOptions: {
+        maintainColor: true,
+        fillOpacity: 0.5
+        // fillColor: nullm
+      }
+    },
+    poly: {
+      allowIntersection: false,
+      drawError: {
+        color: 'fuchsia',
+        message: '<strong>Wups</strong> shapes cannot intersect'
+      }
     }
-    // Do whatever else you need to. (save to db; etc)
+  },
+  position: 'topright'
+}
 
-    this._onChange();
-  }
+class CurrentMap extends Component {
 
-  _onDeleted = (e) => {
+  constructor (props) {
+    super(props)
 
-    let numDeleted = 0;
-    e.layers.eachLayer( (layer) => {
-      numDeleted += 1;
-    });
-    console.log(`onDeleted: removed ${numDeleted} layers`, e);
+    const elementsById = new Map()
 
-    this._onChange();
-  }
+    // for(let i = 0, l = this.props.currentMap.mapFeatures.length; i < l; i++)
 
-  _onMounted = (drawControl) => {
-    console.log('_onMounted', drawControl);
-  }
-
-  _onEditStart = (e) => {
-    console.log('_onEditStart', e);
-  }
-
-  _onEditStop = (e) => {
-    console.log('_onEditStop', e);
-  }
-
-  _onDeleteStart = (e) => {
-    console.log('_onDeleteStart', e);
-  }
-
-  _onDeleteStop = (e) => {
-    console.log('_onDeleteStop', e);
-  }
-
-
-  _editableFG = null
-
-  _onFeatureGroupReady = (reactFGref) => {
-
-    // populate the leaflet FeatureGroup with the geoJson layers
-
-    let leafletGeoJSON = new L.GeoJSON(getGeoJson());
-    let leafletFG = reactFGref.leafletElement;
-
-    leafletGeoJSON.eachLayer( (layer) => {
-      leafletFG.addLayer(layer);
-    });
-
-    // store the ref for future access to content
-
-    this._editableFG = reactFGref;
-  }
-
-  _onChange = () => {
-
-    // this._editableFG contains the edited geometry, which can be manipulated through the leaflet API
-
-    const { onChange } = this.props;
-
-    if (!this._editableFG || !onChange) {
-      return;
+    for(let i = 0, l = this.props.currentMap.mapFeatures.length; i < l; i++) {
+      let geotype = 'polygon'
+      this.props.currentMap.mapFeatures[i].geometry.type===undefined? geotype = this.props.currentMap.mapFeatures[i].geometry.type.toLowerCase() : geotype = 'polygon'
+      console.log('in current map constructor', this.props.currentMap.mapFeatures[i].geometry.type.toString());
+      elementsById.set(i, {
+        type: `${geotype}`,
+        positions: this.props.currentMap.mapFeatures[i].geometry.coordinates[0]
+      })
     }
 
-    const geojsonData = this._editableFG.leafletElement.toGeoJSON();
-    onChange(geojsonData);
+    // for(let i = 0, l = this.props.currentMap.mapFeatures.length; i < l; i++) {
+    //   elementsById.set(i, {
+    //     type: this.props.currentMap.mapFeatures[i].geometry.type,
+    //     positions: this.props.currentMap.mapFeatures[i].geometry.coordinates
+    //   })
+    // }
+    // elementsById.set(1, {
+    //   type: 'polygon',
+    //   positions: [[51.51, -0.1], [51.5, -0.06], [51.52, -0.03]]
+    // })
+    // elementsById.set(2, {
+    //   type: 'polyline',
+    //   positions: [[51.5, -0.04], [51.49, -0.02], [51.51, 0], [51.52, -0.02]]
+    // })
+    // elementsById.set(3, {
+    //   type: 'circlemarker',
+    //   center: [51.5, -0.08],
+    //   radius: 10
+    // })
+    // elementsById.set(4, { type: 'marker', position: [51.5, -0.07] })
+    // elementsById.set(5, { type: 'circle', center: [51.5, -0.05], radius: 600 })
+    // elementsById.set(6, {
+    //   type: 'rectangle',
+    //   bounds: [[51.49, -0.1], [51.48, -0.06]]
+    // })
+    this.state = { elementsById }
   }
+
+
+  // componentDidMount() {
+  //  
+  // }
+
+
+  _getHighestId = () => {
+    // Include 0 to make sure we always have a valid id
+    return Math.max(0, ...this.state.elementsById.keys())
+  }
+
+  _handleCreated = evt => {
+    const { layerType, layer } = evt
+    console.log(layer);
+    console.log(layerType);
+    let shape = layer.toGeoJSON();
+    let shape_to_db = JSON.stringify(shape);
+    console.log(shape);
+    console.log(shape_to_db);
+    if (layerType === 'polyline') {
+      alert('I DO NOT ADD POLYLINE')
+      return
+    }
+
+
+    const newMap = new Map(this.state.elementsById.entries())
+    const newId = this._getHighestId() + 1
+    const props = {
+      polygon: l => ({ positions: l.getLatLngs()[0] }),
+      circlemarker: l => ({ center: l.getLatLng(), radius: l.getRadius() }),
+      marker: l => ({ position: l.getLatLng() }),
+      circle: l => ({ center: l.getLatLng(), radius: l.getRadius() }),
+      rectangle: l => ({ bounds: l.getBounds() })
+    }[layerType](layer)
+
+    newMap.set(newId, { type: layerType, ...props })
+
+    this.setState({ elementsById: newMap })
+
+    this.newFeature(shape);
+
+  let testFeature = this.props.currentMap.mapFeatures[0];
+
+  // let geoson = L.geoJSON(testFeature)
+    
+  }
+
+  _handleExisting = evt => {
+    const { layerType, layer } = evt
+    console.log(layer);
+    console.log(layerType);
+    let shape = layer.toGeoJSON();
+    let shape_to_db = JSON.stringify(shape);
+    console.log(shape);
+    console.log(shape_to_db);
+    if (layerType === 'polyline') {
+      alert('I DO NOT ADD POLYLINE')
+      return
+    }
+
+
+    const newMap = new Map(this.state.elementsById.entries())
+    const newId = this._getHighestId() + 1
+    const props = {
+      polygon: l => ({ positions: l.getLatLngs()[0] }),
+      circlemarker: l => ({ center: l.getLatLng(), radius: l.getRadius() }),
+      marker: l => ({ position: l.getLatLng() }),
+      circle: l => ({ center: l.getLatLng(), radius: l.getRadius() }),
+      rectangle: l => ({ bounds: l.getBounds() })
+    }[layerType](layer)
+
+    newMap.set(newId, { type: layerType, ...props })
+
+    this.setState({ elementsById: newMap })
+
+    this.newFeature(shape);
+
+  let testFeature = this.props.currentMap.mapFeatures[0];
+
+  // let geoson = L.geoJSON(testFeature)
+    
+  }
+
+
+  newFeature = (shape) => {
+    fetch("http://localhost:3000/api/v1/features", {
+      method: "POST",
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json'
+      },
+      body: JSON.stringify({
+        feature: {
+        "map_id": parseFloat(this.props.currentMap.id),
+        "feature_data": JSON.stringify(shape)
+        }
+      })
+    })
+  }
+  // persistFeature(shape) {
+  //   return fetch(API_URL, {
+  //     method: 'POST',
+  //     headers: {
+  //       'content-type': 'application/json',
+  //     },
+  //     body: JSON.stringify(shape)
+  //   }).then(res => res.json());
+  // }
+
+  _handleEdited = (elem, layer, evt) => {
+    const id = Number.parseInt(elem.key)
+    const item = this.state.elementsById.get(id)
+    if (!item) {
+      console.log('No matching item, perhaps a race? skip')
+      return
+    }
+
+    const layerType = item.type
+    const newMap = new Map(this.state.elementsById.entries())
+    const newId = this._getHighestId() + 1
+    const newProps = {
+      polygon: l => ({ positions: l.getLatLngs() }),
+      polyline: l => ({ positions: l.getLatLngs() }),
+      circlemarker: l => ({ center: l.getLatLng(), radius: l.getRadius() }),
+      marker: l => ({ position: l.getLatLng() }),
+      circle: l => ({ center: l.getLatLng(), radius: l.getRadius() }),
+      rectangle: l => null // copy existing item
+    }[layerType](layer)
+
+    if (item.type === 'rectangle') {
+      alert('I DO NOT EDIT RECTANGLES!')
+      // To ensure the underlying leaflet draw state remains in sync, change the id of this element
+      newMap.set(newId, newMap.get(id))
+    } else {
+      newMap.set(newId, { type: layerType, ...newProps })
+    }
+
+    newMap.delete(id)
+    this.setState({ elementsById: newMap })
+  }
+
+  _handleDeleted = (elem, layer, evt) => {
+    const id = Number.parseInt(elem.key)
+    const item = this.state.elementsById.get(id)
+    if (!item) {
+      console.log('No matching item, perhaps a race? skip')
+      return
+    }
+
+    const newMap = new Map(this.state.elementsById.entries())
+
+    if (item.type.indexOf('marker') !== -1) {
+      alert('I DO NOT DELETE MARKERS!')
+      // To ensure the underlying leaflet draw state remains in sync, change the id of this element
+      const newId = this._getHighestId() + 1
+      newMap.set(newId, newMap.get(id))
+    }
+
+    newMap.delete(id)
+    this.setState({ elementsById: newMap })
+  }
+
+  _handleActivityStarted = e => {
+    console.log('started', e)
+    const { flagStartedEditing } = this.props
+    if (flagStartedEditing) {
+      flagStartedEditing()
+    }
+  }
+  _handleActivityStopped = e => {
+    console.log('stopped', e)
+    const { flagStoppedEditing } = this.props
+    if (flagStoppedEditing) {
+      flagStoppedEditing()
+    }
+  }
+
+
+//   onEdited={e => {
+//     e.layers.eachLayer(a => {
+//         this.props.updatePlot({
+//             id: id,
+//             feature: a.toGeoJSON()
+//         });
+//     });
+// }}
+
 
     
   render () {
     return (
-      <Map center={[this.props.currentMap.latitude, this.props.currentMap.longitude]} zoom={this.props.currentMap.zoom}>
+      <LeafletMap center={[this.props.currentMap.latitude, this.props.currentMap.longitude]} zoom={this.props.currentMap.zoom}>
         <TileLayer
           url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
         />
-          <FeatureGroup ref={ (reactFGref) => {this._onFeatureGroupReady(reactFGref);} }>
-            <EditControl
-              position='topright'
-              onEdited={this._onEdited}
-              onCreated={this._onCreated}
-              onDeleted={this._onDeleted}
-              onMounted={this._onMounted}
-              onEditStart={this._onEditStart}
-              onEditStop={this._onEditStop}
-              onDeleteStart={this._onDeleteStart}
-              onDeleteStop={this._onDeleteStop}
-              draw={{
-                rectangle: false
-              }}
-            />
-        </FeatureGroup>
-      </Map>
+
+        {/* <GeoJsonCluster data={this.props.currentMap.mapFeatures} /> */}
+       <EditControlFeatureGroup
+          controlProps={controlSettings}
+          onCreated={this._handleCreated}
+          onEdited={this._handleEdited}
+          onDeleted={this._handleDeleted}
+          onActivityStarted={this._handleActivityStarted}
+          onActivityStopped={this._handleActivityStopped}
+        >
+          {[...this.state.elementsById.keys()].map(id => {
+            const { type, ...props } = this.state.elementsById.get(id)
+            const Element = {
+              polygon: Polygon,
+              polyline: Polyline,
+              circlemarker: CircleMarker,
+              marker: Marker,
+              circle: Circle,
+              rectangle: Rectangle
+            }[type]
+            return <Element key={id} {...props} />
+          })}
+        </EditControlFeatureGroup>
+      </LeafletMap>
     );
   }
 }
-
-function getGeoJson() {
-    return {
-      "type": "FeatureCollection",
-      "features": [
-        {
-          "type": "Feature",
-          "properties": {},
-          "geometry": {
-            "type": "LineString",
-            "coordinates": [
-              [
-                -122.47979164123535,
-                37.830124319877235
-              ],
-              [
-                -122.47721672058105,
-                37.809377088502615
-              ]
-            ]
-          }
-        },
-        {
-          "type": "Feature",
-          "properties": {},
-          "geometry": {
-            "type": "Point",
-            "coordinates": [
-              -122.46923446655273,
-              37.80293476836673
-            ]
-          }
-        },
-        {
-          "type": "Feature",
-          "properties": {},
-          "geometry": {
-            "type": "Point",
-            "coordinates": [
-              -122.48399734497069,
-              37.83466623607849
-            ]
-          }
-        },
-        {
-          "type": "Feature",
-          "properties": {},
-          "geometry": {
-            "type": "Point",
-            "coordinates": [
-              -122.47867584228514,
-              37.81893781173967
-            ]
-          }
-        },
-        {
-          "type": "Feature",
-          "properties": {},
-          "geometry": {
-            "type": "Polygon",
-            "coordinates": [
-              [
-                [
-                  -122.48069286346434,
-                  37.800637436707525
-                ],
-                [
-                  -122.48069286346434,
-                  37.803104310307276
-                ],
-                [
-                  -122.47950196266174,
-                  37.803104310307276
-                ],
-                [
-                  -122.47950196266174,
-                  37.800637436707525
-                ],
-                [
-                  -122.48069286346434,
-                  37.800637436707525
-                ]
-              ]
-            ]
-          }
-        },
-        {
-          "type": "Feature",
-          "properties": {},
-          "geometry": {
-            "type": "Polygon",
-            "coordinates": [
-              [
-                [
-                  -122.48103886842728,
-                  37.833075326166274
-                ],
-                [
-                  -122.48065531253813,
-                  37.832558431940114
-                ],
-                [
-                  -122.4799284338951,
-                  37.8322660885204
-                ],
-                [
-                  -122.47963070869446,
-                  37.83231693093747
-                ],
-                [
-                  -122.47948586940764,
-                  37.832467339549524
-                ],
-                [
-                  -122.47945636510849,
-                  37.83273426112019
-                ],
-                [
-                  -122.47959315776825,
-                  37.83289737938241
-                ],
-                [
-                  -122.48004108667372,
-                  37.833109220743104
-                ],
-                [
-                  -122.48058557510376,
-                  37.83328293020496
-                ],
-                [
-                  -122.48080283403395,
-                  37.83332529830436
-                ],
-                [
-                  -122.48091548681259,
-                  37.83322785163939
-                ],
-                [
-                  -122.48103886842728,
-                  37.833075326166274
-                ]
-              ]
-            ]
-          }
-        },
-        {
-          "type": "Feature",
-          "properties": {},
-          "geometry": {
-            "type": "Polygon",
-            "coordinates": [
-              [
-                [
-                  -122.48043537139893,
-                  37.82564992009924
-                ],
-                [
-                  -122.48129367828368,
-                  37.82629397920697
-                ],
-                [
-                  -122.48240947723389,
-                  37.82544653184479
-                ],
-                [
-                  -122.48373985290527,
-                  37.82632787689904
-                ],
-                [
-                  -122.48425483703613,
-                  37.82680244295304
-                ],
-                [
-                  -122.48605728149415,
-                  37.82639567223645
-                ],
-                [
-                  -122.4898338317871,
-                  37.82663295542695
-                ],
-                [
-                  -122.4930953979492,
-                  37.82415839321614
-                ],
-                [
-                  -122.49700069427489,
-                  37.821887146654376
-                ],
-                [
-                  -122.4991464614868,
-                  37.82171764783966
-                ],
-                [
-                  -122.49850273132326,
-                  37.81798857543524
-                ],
-                [
-                  -122.50923156738281,
-                  37.82090404811055
-                ],
-                [
-                  -122.51232147216798,
-                  37.823344820392535
-                ],
-                [
-                  -122.50150680541992,
-                  37.8271414168374
-                ],
-                [
-                  -122.48743057250977,
-                  37.83093781796035
-                ],
-                [
-                  -122.48313903808594,
-                  37.82822612280363
-                ],
-                [
-                  -122.48043537139893,
-                  37.82564992009924
-                ]
-              ]
-            ]
-          }
-        }
-      ]
-    }
-  }
-  
+export default CurrentMap;

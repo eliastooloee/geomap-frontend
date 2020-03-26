@@ -5,8 +5,9 @@ import MyMaps from './containers/MyMaps'
 import MapPage from './containers/MapPage'
 import Navbar from "./components/NavBar";
 import { api } from "./services/api";
+import L from 'leaflet';
 
-import { Route } from "react-router-dom";
+import { Route, Link, withRouter } from "react-router-dom";
 
 class App extends Component {
 
@@ -15,10 +16,12 @@ class App extends Component {
       user: {}
     },
     currentMap: {
+    id: null,  
     mapName: "",
     latitude: 0,
     longitude: 0,
     zoom: 4,
+    mapFeatures: []
     },
     maps: [],
     myMaps: []
@@ -62,15 +65,41 @@ class App extends Component {
   }
 
   selectMap = (map) => {
+    // console.log()
+    // console.log (map.mapFeatures)
+    let feature_array=[];
+    for(let i = 0, l = map.features.length; i < l; i++) {
+      let json_feature=JSON.parse(map.features[i].feature_data);
+      let geoJsonFeature = L.geoJSON(json_feature)
+      console.log(json_feature)
+      for(let j = 0, l = json_feature.geometry.coordinates[0].length; j < l; j++) {
+         json_feature.geometry.coordinates[0][j].reverse()
+      }
+      console.log(json_feature);
+      feature_array.push(json_feature);
+    }
     this.setState({
       currentMap: {
+        id: map.id,
         latitude: map.latitude,
         longitude: map.longitude,
         zoom: map.zoom,
-        mapName: map.name
+        mapName: map.name,
+        mapFeatures: feature_array
       }
     })
+   this.props.history.push('/map');
+  //  console.log
   }
+
+  // getFeatures = () => {
+  //   fetch(`http://localhost:3000/api/v1/features/`)
+  //   .then(res => res.json())
+  //   .then(myMaps => this.setState({
+  //     myMaps: myMaps
+  //   }))
+  //   .catch(err => console.log(err))
+  // }
 
   getMaps = () => {
     fetch(`http://localhost:3000/api/v1/maps/`)
@@ -116,7 +145,7 @@ class App extends Component {
             <Route 
               exact 
               path="/mymaps" 
-              render={props => <MyMaps currentMap={this.state.currentMap} selectMap={this.selectMap} myMaps={this.state.myMaps}  />} 
+              render={props => <MyMaps {...props} currentMap={this.state.currentMap} selectMap={this.selectMap} myMaps={this.state.myMaps}  />} 
             />
             <Route
               exact
@@ -126,7 +155,7 @@ class App extends Component {
             <Route 
               exact
               path="/map" 
-              render={props => <MapPage currentMap={this.state.currentMap}  handleChange={this.handleChange} newMap={this.newMap} />}
+              render={props => <MapPage {...props} currentMap={this.state.currentMap}  handleChange={this.handleChange} newMap={this.newMap} />}
               />
           </div>
         </div>
@@ -146,4 +175,4 @@ class App extends Component {
   //   );
   // }
  }
-export default App;
+export default withRouter(App);

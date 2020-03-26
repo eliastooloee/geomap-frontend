@@ -1,10 +1,14 @@
 import React from "react";
+import { Link, withRouter } from "react-router-dom";
 
 const MapCard = props => {
     const { map, selectMap } = props;
 
     return(
-        <div className="map-card" onClick={() => selectMap(map)}>
+        <div 
+        className="map-card" 
+        onClick={() => {selectMap(map); 
+            props.history.push("/map");}}>
             <h1> {map.name} </h1>
             <p> Map Center Latitude {map.latitude}°</p>
             <p> Map Center Longitude {map.longitude}°</p>
@@ -13,4 +17,4 @@ const MapCard = props => {
         </div>
     )
 }
-export default MapCard;
+export default withRouter(MapCard);

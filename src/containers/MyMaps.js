@@ -7,7 +7,7 @@ const MyMaps = props => {
         return props.myMaps.length > 0 ? props.myMaps.map(map => {
           return (
             <div key={map.id} >
-              <MapCard map={map} key={map.id} selectMap={props.selectMap} />
+              <MapCard {...props} map={map} key={map.id} selectMap={props.selectMap} />
             </div>
           )
         }): null
