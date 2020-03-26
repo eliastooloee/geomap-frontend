@@ -9,14 +9,14 @@ const Navbar = props => {
       <Link to="/" className="item">
         <h2 className="ui header">
           <i className={`${props.icon} icon`} />
-          <div className="content">GeoMap</div>
+          <div className="content">SimpleMaps</div>
           <div className="sub header">{props.description}</div>
         </h2>
       </Link>
       <div className="right menu">
-        <Link to="/mymaps" className="item">
+        {/* <Link to="/mymaps" className="item">
           My Maps
-        </Link>
+        </Link> */}
         <Link to="/map" className="item" >
           New Map
         </Link>

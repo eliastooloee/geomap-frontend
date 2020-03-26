@@ -2,7 +2,9 @@ import React, { Component } from "react";
 import {
   Map as LeafletMap,
   TileLayer,
+  LayersControl,
   Circle,
+  LayerGroup,
   Rectangle,
   Marker,
   CircleMarker,
@@ -10,11 +12,23 @@ import {
   Polygon,
   Element
 } from 'react-leaflet'
+import MeasureControl from 'react-leaflet-measure';
 import  EditControlFeatureGroup from './FeatureGroup';
+// import  LayersControl from './LayersControl'
 // import GeoJsonCluster from 'react-leaflet-geojson-cluster';
 import L from 'leaflet';
 import "../App.css";
+const { BaseLayer, Overlay } = LayersControl
 
+const measureOptions = {
+  position: 'topright',
+  primaryLengthUnit: 'meters',
+  secondaryLengthUnit: 'kilometers',
+  primaryAreaUnit: 'sqmeters',
+  secondaryAreaUnit: 'acres',
+  activeColor: '#db4a29',
+  completedColor: '#9b2d14'
+};
 
 const controlSettings = {
   draw: {
@@ -61,9 +75,10 @@ class CurrentMap extends Component {
     // for(let i = 0, l = this.props.currentMap.mapFeatures.length; i < l; i++)
 
     for(let i = 0, l = this.props.currentMap.mapFeatures.length; i < l; i++) {
-      let geotype = 'polygon'
+      let geotype = 'marker'
+      this.props.currentMap.mapFeatures[i].geometry.coordinates.length >= 1? geotype= 'marker': geotype='polygon' 
       this.props.currentMap.mapFeatures[i].geometry.type===undefined? geotype = this.props.currentMap.mapFeatures[i].geometry.type.toLowerCase() : geotype = 'polygon'
-      console.log('in current map constructor', this.props.currentMap.mapFeatures[i].geometry.type.toString());
+      console.log('in current map constructor', this.props.currentMap.mapFeatures[i].geometry.coordinates);
       elementsById.set(i, {
         type: `${geotype}`,
         positions: this.props.currentMap.mapFeatures[i].geometry.coordinates[0]
@@ -289,13 +304,43 @@ class CurrentMap extends Component {
     
   render () {
     return (
-      <LeafletMap center={[this.props.currentMap.latitude, this.props.currentMap.longitude]} zoom={this.props.currentMap.zoom}>
-        <TileLayer
-          url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-        />
+      <LeafletMap center={[this.props.currentMap.latitude, this.props.currentMap.longitude]} zoom={this.props.currentMap.zoom} time={''}>
+         {/* <MeasureControl {...measureOptions} /> */}
+         <LayersControl position="topright">
+          <BaseLayer name="OpenTopoMap" >
+            <TileLayer
+            url={this.props.currentMap.tile_url}
+            attribution={this.props.currentMap.attribution}
+            />
+          </BaseLayer>
+          <BaseLayer name="OpenStreetMap.BlackAndWhite">
+            <TileLayer
+              attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+              url="https://tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png"
+            />
+          </BaseLayer>
+          <Overlay name="Hillshade">
+            <TileLayer
+                attribution='Imagery from <a href="http://giscience.uni-hd.de/">GIScience Research Group @ University of Heidelberg</a> | Map data  <a href="https://lpdaac.usgs.gov/products/aster_policies">ASTER GDEM</a>, <a href="http://srtm.csi.cgiar.org/">SRTM</a>'
+                url="https://maps.heigit.org/openmapsurfer/tiles/asterh/webmercator/{z}/{x}/{y}.png"
+              />
+          </Overlay>
+          <Overlay name="Administrative Boundaries">
+            <TileLayer
+                attribution='Imagery from <a href="http://giscience.uni-hd.de/">GIScience Research Group @ University of Heidelberg</a> | Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://maps.heigit.org/openmapsurfer/tiles/adminb/webmercator/{z}/{x}/{y}.png"
+              />
+          </Overlay>
+          <Overlay name="Rail Roads">
+            <TileLayer
+                attribution='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors | Map style: &copy; <a href="https://www.OpenRailwayMap.org">OpenRailwayMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
+                url="https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png"
+              />
+          </Overlay>
+        
+        </LayersControl>
 
-        {/* <GeoJsonCluster data={this.props.currentMap.mapFeatures} /> */}
+        
        <EditControlFeatureGroup
           controlProps={controlSettings}
           onCreated={this._handleCreated}

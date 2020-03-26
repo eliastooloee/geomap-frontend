@@ -10,11 +10,6 @@ const headers = () => {
   };
 };
 
-const getPaintings = () => {
-  return fetch(`${API_ROOT}/paintings/`, { headers: headers() }).then(res =>
-    res.json()
-  );
-};
 
 const login = data => {
   return fetch(`${API_ROOT}/auth`, {
@@ -38,8 +33,5 @@ export const api = {
   auth: {
     login,
     getCurrentUser
-  },
-  paintings: {
-    getPaintings
   }
 };

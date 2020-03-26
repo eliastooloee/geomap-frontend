@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import './App.css';
 import Login from "./components/Login";
+import SignUp from "./components/Signup";
 import MyMaps from './containers/MyMaps'
 import MapPage from './containers/MapPage'
 import Navbar from "./components/NavBar";
@@ -21,6 +22,8 @@ class App extends Component {
     latitude: 0,
     longitude: 0,
     zoom: 4,
+    tile_url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+    attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
     mapFeatures: []
     },
     maps: [],
@@ -40,6 +43,8 @@ class App extends Component {
       this.getMaps();
     }
   }
+
+
 
   login = data => {
     const updatedState = { ...this.state.auth, user: {id: data.id,  username: data.username} };
@@ -84,6 +89,8 @@ class App extends Component {
         latitude: map.latitude,
         longitude: map.longitude,
         zoom: map.zoom,
+        tile_url: map.tile_url,
+        attribution: map.attribution,
         mapName: map.name,
         mapFeatures: feature_array
       }
@@ -123,7 +130,8 @@ class App extends Component {
         "name": this.state.currentMap.mapName,
         "latitude": parseFloat(this.state.currentMap.latitude),
         "longitude": parseFloat(this.state.currentMap.longitude),
-        "zoom": parseFloat(this.state.currentMap.zoom)
+        "zoom": parseFloat(this.state.currentMap.zoom),
+        "tile_url": this.state.currentMap.tile_url
         }
       })
     })
@@ -135,8 +143,8 @@ class App extends Component {
         <div className="ui container grid">
             <Navbar
               color="green"
-              title="GeoMap"
-              description="Make dank maps"
+              title="Simple Map"
+              description="Cartography Doesn't Have to be Hard"
               currentUser={this.state.auth.user}
               handleLogout={this.logout}
             />
@@ -151,6 +159,11 @@ class App extends Component {
               exact
               path="/login"
               render={props => <Login {...props} onLogin={this.login} />}
+            />
+             <Route
+              exact
+              path="/signup"
+              render={props => <SignUp {...props} signUp={this.signUp} />}
             />
             <Route 
               exact
